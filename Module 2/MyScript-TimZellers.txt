@@ -1,0 +1,593 @@
+
+
+ASA Internal
+-----------------
+
+conf t
+enable password capstone
+
+interface G1/1
+nameif inside
+security-level 100
+ip address 172.21.1.1 255.255.255.0
+no shutdown
+
+interface G1/2
+nameif guest
+security-level 50
+ip address 172.21.2.1 255.255.255.0
+no shutdown
+
+interface G1/3
+nameif outside
+security-level 0
+ip address 199.199.199.18 255.255.255.248
+no shutdown
+end
+
+conf t
+route outside 0.0.0.0 0.0.0.0 199.199.199.17 1
+end
+
+conf t
+object network INSIDE-NET-TO-OUTSIDE
+description These are the production inside addressess that will be allowed to translate to the outside public ip address
+subnet 172.21.1.0 255.255.255.0
+nat (inside,outside) dynamic interface
+end
+
+conf t
+object network GUEST-NET-TO-OUTSIDE
+description These are the guest inside addressess that will be allowed to translate to the outside public ip address
+subnet 172.21.2.0 255.255.255.0
+nat (guest,outside) dynamic interface
+end
+
+conf t
+object network OUTSIDE-NET-TO-DMZ
+description These are the outside addressess that will be allowed to translate to the dmz address
+subnet 199.199.199.0 255.255.255.248
+nat (outside,inside) dynamic interface
+end
+
+conf t 
+access-list PUBLIC_TRAFFIC extended permit ICMP any host 199.199.199.18
+access-list PUBLIC_TRAFFIC extended permit TCP any host 199.199.199.18
+access-list PUBLIC_TRAFFIC extended permit UDP any host 199.199.199.18
+=======================================================================
+
+
+
+NOC-Dist-Sw
+------------
+
+conf t
+hostname NOC-Dist-Sw
+enable password capstone
+line console 0
+login
+password cisco
+line vty 0 4
+login
+password cisco
+
+
+banner motd #Warning: By using this Stubbs system, you are aknowledging consent to monitoring. All activities performed on this device are logged and monitered.#
+
+
+vlan 100
+Name Vlan100
+exit
+
+vlan 200
+Name Vlan200
+exit
+
+int vlan100
+ip address 172.21.1.10 255.255.255.0
+no shut
+exit
+
+int vlan200
+ip address 172.21.2.10 255.255.255.0
+no shut
+exit
+
+int g 8/1
+switchport mode access
+switchport access vlan 100
+no shutdown
+exit 
+int g 9/1
+switchport mode access
+switchport access vlan 100
+no shut
+exit
+int g 7/1
+switchport mode access
+switchport access vlan 100
+no shut
+exit
+int g 6/1
+switchport mode access
+switchport access vlan 100
+no shut
+exit
+int g 0/1
+switchport mode access
+switchport access vlan 100
+no shut
+exit
+int g 4/1
+switchport mode access
+switchport access vlan 100
+no shut
+exit
+int g 1/1
+switchport mode access
+switchport access vlan 100
+no shut
+exit
+int g 2/1
+switchport mode access
+switchport access vlan 100
+no shut
+exit
+int g 3/1
+switchport mode access
+switchport access vlan 200
+no shut
+exit
+
+int g6/1
+switchport mode trunk
+exit
+
+int g7/1
+switchport mode trunk
+exit
+
+int g8/1
+switchport mode trunk
+exit
+
+int g9/1
+switchport mode trunk
+exit
+
+ip dhcp excluded-address 172.21.1.1 172.21.2.99
+ip dhcp pool VL200-GUEST-WIFI
+network 172.21.2.0 255.255.255.0
+default-router 172.21.2.1
+dns-server 10.10.10.11
+exit
+
+**SAVE**
+============================================================================
+
+
+Floor 1
+____________________________________
+conf t
+hostname Floor1
+enable password capstone
+line console 0
+login
+password cisco
+line vty 0 4
+login
+password cisco
+exit
+
+vlan 100
+Name Vlan100
+exit
+
+vlan 200
+Name Vlan200
+exit
+
+int vlan100
+ip address 172.21.1.11 255.255.255.0
+no shut
+int vlan200
+ip address 172.21.2.11 255.255.255.0
+no shut 
+exit
+
+
+int g1/1
+switchport mode access
+switchport access vlan 200
+no shut
+
+int g0/1
+switchport mode access
+switchport access vlan 100
+no shut
+
+int g9/1
+switchport mode access
+switchport access vlan 100
+no shut 
+
+int g8/1
+switchport mode access
+switchport access vlan 100
+no shut
+
+int g8/1
+switchport mode trunk
+exit
+
+int g9/1
+switchport mode trunk
+exit
+
+ip dhcp excluded-address 172.21.1.1 172.21.2.99
+ip dhcp pool VL200-GUEST-WIFI
+network 172.21.2.0 255.255.255.0
+default-router 172.21.2.1
+dns-server 10.10.10.11
+end
+
+**SAVE**
+
+
+Floor 2
+____________________________________
+conf t
+hostname Floor2
+enable password capstone
+line console 0
+login
+password cisco
+line vty 0 4
+login
+password cisco
+exit
+
+vlan 100
+Name Vlan100
+exit
+
+vlan 200
+Name Vlan200
+exit
+
+int vlan100
+ip address 172.21.1.12 255.255.255.0
+no shut
+int vlan200
+ip address 172.21.2.12 255.255.255.0
+no shut 
+exit
+
+
+int g1/1
+switchport mode access
+switchport access vlan 200
+no shut
+
+int g0/1
+switchport mode access
+switchport access vlan 100
+no shut
+
+int g9/1
+switchport mode access
+switchport access vlan 100
+no shut
+
+int g8/1
+switchport mode access
+switchport access vlan 100
+no shut
+
+int g8/1
+switchport mode trunk
+exit
+
+int g9/1
+switchport mode trunk
+exit
+
+ip dhcp excluded-address 172.21.1.1 172.21.2.99
+ip dhcp pool VL200-GUEST-WIFI
+network 172.21.2.0 255.255.255.0
+default-router 172.21.2.1
+dns-server 10.10.10.11
+end
+
+**SAVE**
+
+
+Floor 3
+____________________________________
+conf t
+hostname Floor3
+enable password capstone
+line console 0
+login
+password cisco
+line vty 0 4
+login
+password cisco
+exit
+
+vlan 100
+Name Vlan100
+exit
+
+vlan 200
+Name Vlan200
+exit
+
+int vlan100
+ip address 172.21.1.13 255.255.255.0
+no shut
+int vlan200
+ip address 172.21.2.13 255.255.255.0
+no shut 
+exit
+
+
+int g1/1
+switchport mode access
+switchport access vlan 100
+no shut
+
+int g0/1
+switchport mode access
+switchport access vlan 100
+no shut
+
+int g9/1
+switchport mode access
+switchport access vlan 100
+no shut
+
+int g8/1
+switchport mode access
+switchport access vlan 100
+no shut
+
+int g8/1
+switchport mode trunk
+exit
+
+int g9/1
+switchport mode trunk
+exit
+
+
+ip dhcp excluded-address 172.21.1.1 172.21.2.99
+ip dhcp pool VL200-GUEST-WIFI
+network 172.21.2.0 255.255.255.0
+default-router 172.21.2.1
+dns-server 10.10.10.11
+end
+
+**SAVE**
+
+
+Floor 4
+____________________________________
+conf t
+hostname Floor4
+enable password capstone
+line console 0
+login
+password cisco
+line vty 0 4
+login
+password cisco
+exit
+
+vlan 100
+Name Vlan100
+exit
+
+vlan 200
+Name Vlan200
+exit
+
+int vlan100
+ip address 172.21.1.14 255.255.255.0
+no shut
+int vlan200
+ip address 172.21.2.14 255.255.255.0
+no shut 
+exit
+
+
+int g0/1
+switchport mode access
+switchport access vlan 100
+no shut
+
+int g9/1
+switchport mode access
+switchport access vlan 100
+no shut
+
+int g8/1
+switchport mode access
+switchport access vlan 100
+no shut
+
+int g8/1
+switchport mode trunk
+exit
+
+int g9/1
+switchport mode trunk
+exit
+
+ip dhcp excluded-address 172.21.1.1 172.21.2.99
+ip dhcp pool VL200-GUEST-WIFI
+network 172.21.2.0 255.255.255.0
+default-router 172.21.2.1
+dns-server 10.10.10.11
+end
+
+**SAVE**
+
+=====================================================================================
+
+
+Perimeter-Router
+=================================================
+Device name and passwords
+=================================================
+enable 
+config t
+hostname Perimeter-Router
+enable password capstone
+no ip domain-lookup
+line console 0
+password cisco
+login 
+exit
+line vty 0 4
+password cisco
+login
+
+
+===============================================
+IP Addresses/Masks per device 
+===============================================
+config t
+interface G0/0 
+ip address 199.199.199.2 255.255.255.248
+no shutdown
+
+interface G1/0 
+ip address 199.199.199.17 255.255.255.248
+no shutdown
+
+interface G2/0
+ip address 199.199.199.9 255.255.255.248
+no shutdown
+
+================================================
+Default route pointing to IP
+================================================ 
+config t
+ip route 0.0.0.0 0.0.0.0 199.199.199.1
+
+================================================
+Create an ACL 110 inbound
+================================================
+interface G0/0
+ip access-group 110 in
+access-list 110 permit UDP any host 10.10.10.11 eq domain 
+access-list 110 permit UDP any host 199.199.199.10 eq domain 
+access-list 110 permit TCP any host 10.10.10.11 eq WWW 
+access-list 110 permit TCP any host 199.199.199.10 eq WWW
+access-list 110 permit TCP any host 10.10.10.11 eq FTP 
+access-list 110 permit TCP any host 199.199.199.10 eq FTP
+access-list 110 permit ICMP any host 199.199.199.10 
+access-list 110 permit ICMP any host 10.10.10.11
+ 
+
+
+
+Notes: *** Denotes possible deletions of these lines of syntax
+
+Do not block ranges 
+
+53 is DNS domain
+
+===================================================================================================
+
+
+
+DMZ ASA FIREWALL
+-----------------------------------------------------------
+interface GigabitEthernet1/1
+nameif DMZ
+security-level 100
+ip address 10.10.10.1 255.255.255.0
+no shutdown
+
+interface GigabitEthernet1/2
+nameif outside
+security-level 0
+ip address 199.199.199.10 255.255.255.248
+no shutdown
+end
+
+conf t
+route outside 0.0.0.0 0.0.0.0 199.199.199.9 1
+end
+
+conf t
+object network DMZ-NET-TO-OUTSIDE
+description
+subnet 10.10.10.0 255.255.255.0
+nat (DMZ,outside) dynamic interface
+end
+
+conf t
+object network webserver
+subnet 10.10.10.11 255.255.255.0
+nat (DMZ,outside) static 199.199.199.11
+
+
+
+conf t
+access-list OUTSIDEIN extended permit icmp any any
+access-list OUTSIDEIN extended permit tcp any object webserver eq domain
+access-list OUTSIDEIN extended permit tcp any object webserver eq www
+access-list OUTSIDEIN extended permit tcp any object webserver eq 443
+access-list OUTSIDEIN extended permit tcp any object webserver
+
+access-group OUTSIDEIN in interface outside
+
+
+========================================================================================================
+
+DMZ SWITCH
+--------------------------------------------------------
+configure terminal
+enable password capstone
+banner motd &Unauthorized Access is Prohibited&
+
+line console 0
+password cisco
+login
+exit
+
+line vty 0 4
+password cisco
+login
+exit
+
+vlan 199
+exit
+
+interface vlan 199
+ip address 10.10.10.12 255.255.255.0
+no shutdown
+exit
+
+interface FastEthernet 0/1
+switchport access vlan 199
+no shut
+exit
+
+interface FastEthernet 0/2
+switchport access vlan 199
+no shut
+exit
+
+interface FastEthernet 0/3
+switchport access vlan 199
+no shut
+exit
+
+=========================================================================================================
+
+
+
